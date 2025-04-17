@@ -126,23 +126,22 @@ class CommonCrawlProcessor:
         parts = [p for p in path.split("/") if p]
         return parts[0] if parts else None
 
-    def load_to_postgres(self, df: pd.DataFrame, table_name: str = "external_links"):
+    def load_to_postgres(self, df: pd.DataFrame, metrics: Dict[str, Any]) -> None:
         """
-        Load a DataFrame to PostgreSQL.
+        Load processed data into PostgreSQL.
         
         Args:
-            df (DataFrame): DataFrame to load
-            table_name (str): Name of the table to create/append to
+            df: DataFrame with processed data
+            metrics: Dictionary of computed metrics
         """
-        logger.info(f"Loading {len(df)} records to {table_name}")
+        logger.info(f"\nLoading {len(df)} records to {metrics}")
         
         # Define table schemas
         table_schemas = {
-            "external_links": """
+            'external_links': """
                 CREATE TABLE IF NOT EXISTS external_links (
                     id SERIAL PRIMARY KEY,
                     source_url TEXT,
-                    source_domain TEXT,
                     target_url TEXT,
                     target_domain TEXT,
                     is_homepage BOOLEAN,
@@ -153,72 +152,62 @@ class CommonCrawlProcessor:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """,
-            "website_metrics": """
+            'website_metrics': """
                 CREATE TABLE IF NOT EXISTS website_metrics (
                     id SERIAL PRIMARY KEY,
-                    total_unique_domains INTEGER,
-                    homepage_ratio FLOAT,
-                    avg_subsections_per_domain FLOAT,
-                    top_categories JSONB,
-                    geographic_distribution JSONB,
+                    metric_name TEXT,
+                    metric_value JSONB,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """
         }
         
-        # Get the appropriate schema
-        create_table_sql = table_schemas.get(table_name)
-        if not create_table_sql:
-            raise ValueError(f"Unknown table name: {table_name}")
-        
-        # Execute SQL commands
-        with psycopg2.connect(**self.db_params) as conn:
-            with conn.cursor() as cur:
-                # Create table
-                cur.execute(create_table_sql)
-                
-                if table_name == "external_links":
-                    # Select and prepare columns for external_links
-                    insert_df = df[[
-                        'source_url', 'source_domain', 'target_url', 'target_domain',
-                        'is_homepage', 'subsection', 'country', 'category', 'is_ad_based'
-                    ]].copy()
-                    
-                    # Convert DataFrame to list of tuples for insertion
-                    values = [tuple(x) for x in insert_df.to_numpy()]
-                    insert_sql = """
-                    INSERT INTO external_links (
-                        source_url, source_domain, target_url, target_domain,
-                        is_homepage, subsection, country, category, is_ad_based
-                    ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s
-                    )
-                    """
-                else:  # website_metrics
-                    # Convert dictionaries to JSON strings
-                    df['top_categories'] = df['top_categories'].apply(lambda x: json.dumps(x))
-                    df['geographic_distribution'] = df['geographic_distribution'].apply(lambda x: json.dumps(x))
-                    
-                    # Convert DataFrame to list of tuples for insertion
-                    values = [tuple(x) for x in df.to_numpy()]
-                    insert_sql = """
-                    INSERT INTO website_metrics (
-                        total_unique_domains, homepage_ratio, avg_subsections_per_domain,
-                        top_categories, geographic_distribution
-                    ) VALUES (
-                        %s, %s, %s, %s::jsonb, %s::jsonb
-                    )
-                    """
-                
-                # Insert data in batches
-                batch_size = 1000
-                for i in range(0, len(values), batch_size):
-                    batch = values[i:i + batch_size]
-                    cur.executemany(insert_sql, batch)
-                
-                conn.commit()
-        
-        logger.info(f"Loaded {len(df)} rows to {table_name}")
+        try:
+            # Connect to PostgreSQL
+            conn = psycopg2.connect(**self.db_params)
+            cur = conn.cursor()
+            
+            # Create tables
+            for table_name, schema in table_schemas.items():
+                cur.execute(schema)
+            
+            # Insert data into external_links table
+            for _, row in df.iterrows():
+                cur.execute("""
+                    INSERT INTO external_links 
+                    (source_url, target_url, target_domain, is_homepage, subsection, country, category, is_ad_based)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    row['source_url'],
+                    row['target_url'],
+                    row['target_domain'],
+                    row['is_homepage'],
+                    row['subsection'],
+                    row.get('country'),
+                    row.get('category'),
+                    row.get('is_ad_based', False)
+                ))
+            
+            # Insert metrics
+            cur.execute("""
+                INSERT INTO website_metrics (metric_name, metric_value)
+                VALUES (%s, %s)
+            """, ('crawl_metrics', json.dumps(metrics)))
+            
+            # Commit changes
+            conn.commit()
+            logger.info("Successfully loaded data to PostgreSQL")
+            
+        except Exception as e:
+            logger.error(f"Error loading data to PostgreSQL: {str(e)}")
+            if conn:
+                conn.rollback()
+            raise
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
     def save_to_arrow(self, df: pd.DataFrame, partition_cols: List[str], output_dir: Path):
         """
