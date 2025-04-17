@@ -2,7 +2,26 @@
 
 This project processes Common Crawl WAT files to extract and analyze website metrics, storing results in PostgreSQL.
 
-## Setup
+## Quick Start
+
+For a completely automated setup, run:
+
+```bash
+make setup-airflow
+```
+
+This command will:
+1. Create the necessary directory structure
+2. Build the Docker images
+3. Start the services
+4. Initialize the Airflow database
+5. Create an admin user
+6. Set up connections and variables
+7. Provide instructions for accessing the Airflow UI
+
+## Manual Setup (Alternative)
+
+If you prefer to set up the project manually:
 
 1. Create a Python virtual environment:
 ```bash
@@ -16,43 +35,34 @@ pip install -r requirements.txt
 pip install -r requirements-airflow.txt
 ```
 
-3. Initialize Airflow:
+3. Set up the project structure:
 ```bash
-export AIRFLOW_HOME=$(pwd)/airflow
-airflow db init
-airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password admin
+make setup
 ```
 
-4. Configure PostgreSQL connection in Airflow:
+4. Build and start the services:
 ```bash
-airflow connections add 'postgres_default' \
-    --conn-type 'postgres' \
-    --conn-host 'localhost' \
-    --conn-login 'postgres' \
-    --conn-password 'your_password' \
-    --conn-port 5432 \
-    --conn-schema 'postgres'
+make build
+make up
 ```
 
-## Running the Pipeline
-
-1. Start the Airflow webserver:
+5. Initialize Airflow:
 ```bash
-airflow webserver --port 8080
+make init-airflow
+make setup-airflow
 ```
 
-2. In a new terminal, start the Airflow scheduler:
-```bash
-airflow scheduler
-```
+6. Access the Airflow web interface at `http://localhost:8080`
+   - Username: admin
+   - Password: admin
 
-3. Access the Airflow UI at http://localhost:8080 and enable the DAG 'common_crawl_processing'
+
+7. Running DAGs
+
+Run the DAGs in the following order:
+
+- common_crawl_segment_collector
+- common_crawl_processing
 
 ## Project Structure
 
@@ -61,26 +71,21 @@ airflow scheduler
 - `airflow/`: Airflow home directory (created during setup)
 - `data/`: Directory for temporary data storage (gitignored)
 
-## Monitoring
 
-Monitor pipeline execution through:
-- Airflow UI at http://localhost:8080
-- Logs in `airflow/logs/`
-- PostgreSQL database for processed metrics
 
 ## Features
 
 1. Downloads and processes WAT files from Common Crawl
 2. Extracts external links from web pages
 3. Categorizes websites based on content
-4. Stores results in PostgreSQL and Parquet format
+4.Stores results in PostgreSQL and Parquet format
 
 ## Data Processing
 
 The pipeline:
 1. Downloads WAT files from Common Crawl
 2. Extracts external links and metadata
-3. Categorizes websites
+3.Categorizes websites
 4. Saves results to PostgreSQL and Parquet
 
 ## Development
@@ -125,99 +130,45 @@ python -m pytest tests/
 └── config/            # Configuration files
 ```
 
-## Installation
+# Cleanup
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd data-engineer-challenge
-   ```
+When you're done working with the project, you can clean up resources using the provided Make targets:
 
-2. Set up the project:
-   ```bash
-   make setup
-   ```
+## Basic Cleanup
 
-3. Build and start the services:
-   ```bash
-   make build
-   make up
-   ```
+```bash
+# Stop all services
+make down
 
-4. Initialize Airflow:
-   ```bash
-   make init-airflow
-   ```
-
-## Usage
-
-1. Access the Airflow web interface at `http://localhost:8080`
-   - Username: admin
-   - Password: admin
-
-2. The pipeline can be triggered manually through the Airflow UI or scheduled to run automatically.
-
-3. To process new Common Crawl segments:
-   - Navigate to the DAGs section in Airflow
-   - Find the "common_crawl_analysis" DAG
-   - Click "Trigger DAG" and provide the segment IDs
-
-## Development
-
-- Format code:
-  ```bash
-  make format
-  ```
-
-- Run tests:
-  ```bash
-  make test
-  ```
-
-- Run linting:
-  ```bash
-  make lint
-  ```
-
-## Data Flow
-
-1. Download Common Crawl segments
-2. Extract external links
-3. Load data into PostgreSQL
-4. Analyze link structure and categorize websites
-5. Compute metrics
-6. Save results in columnar format
-
-## Metrics
-
-The pipeline computes the following metrics:
-1. Total number of unique domains
-2. Distribution of website categories
-3. Geographic distribution of websites
-4. Ad-based vs. non-ad-based domain ratio
-5. Average number of subsections per domain
-
-## Checking database data
-
-```sh
-docker compose exec postgres psql -U dataengineer -d crawldata -c "SELECT COUNT(*) FROM external_links;"
+# Clean up data and containers
+make clean
 ```
 
-## Contributing
+## Comprehensive Cleanup
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+For a more thorough cleanup that includes Docker images:
 
-## License
+```bash
+# Clean up everything (containers, volumes, images, data)
+make clean-all
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Data-Only Cleanup
 
-# Get Segments
+If you only want to clean up data files without affecting containers:
 
-wget https://data.commoncrawl.org/crawl-data/CC-MAIN-2025-13/wet.paths.gz
+```bash
+# Clean up only data files
+make clean-data
+```
 
-# 
-gunzip wet.paths.gz
+## Virtual Environment Cleanup
+
+To remove the Python virtual environment:
+
+```bash
+# Remove Python virtual environment
+make clean-venv
+```
+
+These Make targets will ensure that all resources created by the project are properly cleaned up, preventing any unnecessary disk space usage or potential conflicts with other projects. 

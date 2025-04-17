@@ -30,7 +30,6 @@ class WebsiteCategorizer:
             with open(ad_domains_file) as f:
                 return set(json.load(f))
         
-        # Default list of known ad domains
         return {
             "doubleclick.net",
             "googleadservices.com",
@@ -106,14 +105,12 @@ class WebsiteCategorizer:
             return None
             
         try:
-            # Use Clearbit Logo API to get company info
             response = requests.get(
                 f"https://logo.clearbit.com/{domain}",
                 headers={"Authorization": f"Bearer {self.api_key}"}
             )
             
             if response.status_code == 200:
-                # Get company info from Clearbit
                 company_response = requests.get(
                     f"https://company.clearbit.com/v2/companies/find?domain={domain}",
                     headers={"Authorization": f"Bearer {self.api_key}"}
@@ -147,7 +144,6 @@ class WebsiteCategorizer:
             if pattern in domain:
                 return category
         
-        # Default categories based on common TLDs and patterns
         if domain.endswith('.edu'):
             return 'Education'
         elif domain.endswith('.gov'):

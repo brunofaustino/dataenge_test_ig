@@ -1,7 +1,5 @@
--- Create extensions
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- Create website_metrics table
 CREATE TABLE IF NOT EXISTS website_metrics (
     id SERIAL PRIMARY KEY,
     metric_name VARCHAR(255) NOT NULL,
@@ -9,7 +7,7 @@ CREATE TABLE IF NOT EXISTS website_metrics (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create domains table
+
 CREATE TABLE IF NOT EXISTS domains (
     id SERIAL PRIMARY KEY,
     domain VARCHAR(255) UNIQUE NOT NULL,
@@ -21,7 +19,6 @@ CREATE TABLE IF NOT EXISTS domains (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create links table
 CREATE TABLE IF NOT EXISTS links (
     id SERIAL PRIMARY KEY,
     source_domain VARCHAR(255) NOT NULL,
@@ -30,13 +27,11 @@ CREATE TABLE IF NOT EXISTS links (
     FOREIGN KEY (source_domain) REFERENCES domains(domain)
 );
 
--- Create index on domains.domain
+
 CREATE INDEX IF NOT EXISTS idx_domains_domain ON domains(domain);
 
--- Create index on links.source_domain
 CREATE INDEX IF NOT EXISTS idx_links_source_domain ON links(source_domain);
 
--- Create base table for links with partitioning
 CREATE TABLE links (
     id BIGSERIAL,
     source_domain VARCHAR(255) NOT NULL,
@@ -48,7 +43,6 @@ CREATE TABLE links (
     PRIMARY KEY (crawl_date, id)
 ) PARTITION BY RANGE (crawl_date);
 
--- Create partitions for the next 12 months
 DO $$
 DECLARE
     start_date DATE := DATE_TRUNC('month', CURRENT_DATE);
@@ -83,7 +77,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- Create metrics table
+
 CREATE TABLE metrics (
     id SERIAL PRIMARY KEY,
     metric_name VARCHAR(100) NOT NULL,
@@ -93,16 +87,13 @@ CREATE TABLE metrics (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index on metrics
 CREATE INDEX idx_metrics_domain_date ON metrics (domain, crawl_date);
 
--- Create functions for metrics computation
 CREATE OR REPLACE FUNCTION update_domain_metrics(
     p_domain VARCHAR(255),
     p_crawl_date DATE
 ) RETURNS VOID AS $$
 BEGIN
-    -- Insert or update outbound links count
     INSERT INTO metrics (metric_name, metric_value, domain, crawl_date)
     SELECT 'outbound_links_count', COUNT(*), source_domain, p_crawl_date
     FROM links
@@ -111,7 +102,6 @@ BEGIN
     ON CONFLICT (domain, metric_name, crawl_date) 
     DO UPDATE SET metric_value = EXCLUDED.metric_value;
 
-    -- Insert or update inbound links count
     INSERT INTO metrics (metric_name, metric_value, domain, crawl_date)
     SELECT 'inbound_links_count', COUNT(*), target_domain, p_crawl_date
     FROM links

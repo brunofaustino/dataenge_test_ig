@@ -15,13 +15,11 @@ def initialize_connections():
             port=5432
         )
         
-        # Check if connection already exists
         if not session.query(Connection).filter(Connection.conn_id == postgres_conn.conn_id).first():
             session.add(postgres_conn)
             print(f"Added connection: {postgres_conn.conn_id}")
 
 def initialize_variables():
-    # Common Crawl configuration
     variables = {
         'COMMONCRAWL_BASE_URL': 'https://data.commoncrawl.org',
         'WAT_FILES_PER_BATCH': '2',

@@ -26,14 +26,12 @@ env/
 ENV/
 .env
 
-# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 .DS_Store
 
-# Project specific
 data/
 *.log
 *.gz

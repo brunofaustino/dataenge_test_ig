@@ -33,7 +33,6 @@ class MetricsProcessor:
         """
         logger.info("\nComputing metrics...")
         
-        # Basic metrics
         metrics = {
             'total_unique_domains': df['target_domain'].nunique(),
             'homepage_ratio': df['is_homepage'].mean(),
@@ -63,7 +62,6 @@ class MetricsProcessor:
             ad_ratio = df['is_ad_based'].mean()
             metrics['ad_based_ratio'] = ad_ratio
         
-        # Log metrics
         logger.info("\nMetrics:")
         for key, value in metrics.items():
             logger.info(f"{key}: {value}")
@@ -81,7 +79,6 @@ class MetricsProcessor:
         Returns:
             Path to the saved metrics file
         """
-        # Convert empty dictionaries to None to avoid PyArrow struct type issues
         processed_metrics = {}
         for key, value in metrics.items():
             if isinstance(value, dict) and not value:
