@@ -1,24 +1,72 @@
-# Common Crawl Data Processing
+# Common Crawl Data Processing Pipeline
 
-This project processes Common Crawl data to extract and analyze external links from websites.
+This project processes Common Crawl WAT files to extract and analyze website metrics, storing results in PostgreSQL.
+
+## Setup
+
+1. Create a Python virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+pip install -r requirements-airflow.txt
+```
+
+3. Initialize Airflow:
+```bash
+export AIRFLOW_HOME=$(pwd)/airflow
+airflow db init
+airflow users create \
+    --username admin \
+    --firstname Admin \
+    --lastname User \
+    --role Admin \
+    --email admin@example.com \
+    --password admin
+```
+
+4. Configure PostgreSQL connection in Airflow:
+```bash
+airflow connections add 'postgres_default' \
+    --conn-type 'postgres' \
+    --conn-host 'localhost' \
+    --conn-login 'postgres' \
+    --conn-password 'your_password' \
+    --conn-port 5432 \
+    --conn-schema 'postgres'
+```
+
+## Running the Pipeline
+
+1. Start the Airflow webserver:
+```bash
+airflow webserver --port 8080
+```
+
+2. In a new terminal, start the Airflow scheduler:
+```bash
+airflow scheduler
+```
+
+3. Access the Airflow UI at http://localhost:8080 and enable the DAG 'common_crawl_processing'
 
 ## Project Structure
 
-```
-.
-├── data/                      # Data directory
-│   ├── raw/                   # Raw WAT files
-│   ├── processed/             # Processed data
-│   └── final/                 # Final output files
-├── dags/                      # Airflow DAGs
-│   └── common_crawl_analysis.py
-├── src/                       # Source code
-│   ├── data_processor.py      # Data processing logic
-│   └── website_categorizer.py # Website categorization
-├── tests/                     # Test files
-├── docker-compose.yml         # Docker configuration
-└── requirements.txt           # Python dependencies
-```
+- `src/`: Source code for Common Crawl data processing
+- `dags/`: Airflow DAG definitions
+- `airflow/`: Airflow home directory (created during setup)
+- `data/`: Directory for temporary data storage (gitignored)
+
+## Monitoring
+
+Monitor pipeline execution through:
+- Airflow UI at http://localhost:8080
+- Logs in `airflow/logs/`
+- PostgreSQL database for processed metrics
 
 ## Features
 
@@ -26,20 +74,6 @@ This project processes Common Crawl data to extract and analyze external links f
 2. Extracts external links from web pages
 3. Categorizes websites based on content
 4. Stores results in PostgreSQL and Parquet format
-
-## Setup
-
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Start the services:
-   ```bash
-   docker compose up -d
-   ```
-
-3. Access Airflow web interface at http://localhost:8080
 
 ## Data Processing
 
