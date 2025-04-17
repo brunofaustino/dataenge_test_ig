@@ -4,6 +4,20 @@ This project processes Common Crawl WAT files to extract and analyze website met
 
 ## Quick Start
 
+### Requirements
+
+- Python 3.8+
+- Apache Airflow 2.7.0+
+- PostgreSQL 13+
+- Docker and Docker Compose
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+- Make
+- Git
+
 For a completely automated setup, run the following manually :
 
 1. Create a Python virtual environment:
@@ -122,20 +136,6 @@ python -m pytest tests/
 
 - PostgreSQL: Raw extracted links and metadata
 - Parquet: Final processed data, partitioned by source domain
-
-## Requirements
-
-- Python 3.8+
-- Apache Airflow 2.7.0+
-- PostgreSQL 13+
-- Docker and Docker Compose
-
-## Prerequisites
-
-- Docker
-- Docker Compose
-- Make
-- Git
 
 # Cleanup
 
