@@ -4,24 +4,7 @@ This project processes Common Crawl WAT files to extract and analyze website met
 
 ## Quick Start
 
-For a completely automated setup, run:
-
-```bash
-make setup-airflow
-```
-
-This command will:
-1. Create the necessary directory structure
-2. Build the Docker images
-3. Start the services
-4. Initialize the Airflow database
-5. Create an admin user
-6. Set up connections and variables
-7. Provide instructions for accessing the Airflow UI
-
-## Manual Setup (Alternative)
-
-If you prefer to set up the project manually:
+For a completely automated setup, run the following manually :
 
 1. Create a Python virtual environment:
 ```bash
@@ -72,12 +55,46 @@ Run the DAGs in the following order:
 
 ## Project Structure
 
-- `src/`: Source code for Common Crawl data processing
-- `dags/`: Airflow DAG definitions
-- `airflow/`: Airflow home directory (created during setup)
-- `data/`: Directory for temporary data storage (gitignored)
+```
+.
+├── data/                      # Data storage directory
+│   ├── raw/                   # Raw WAT files
+│   ├── processed/             # Processed data files
+│   └── reports/               # Analytics reports
+├── dags/                      # Airflow DAG definitions
+│   ├── common_crawl_processing.py      # Main processing DAG
+│   └── common_crawl_segment_collector.py # Segment collection DAG
+├── docker/                    # Docker-related files
+├── img/                       # Project images and diagrams
+├── logs/                      # Application logs
+├── plugins/                   # Airflow custom plugins
+├── src/                       # Source code
+│   ├── data_processor.py      # Data processing core functionality
+│   ├── wat_processor.py       # WAT file processing
+│   ├── metrics_processor.py   # Metrics computation
+│   ├── website_categorizer.py # Website categorization
+│   ├── process_wat.py         # WAT processing utilities
+│   ├── compute_metrics.py     # Metrics computation utilities
+│   └── main.py               # Main application entry point
+├── tests/                     # Test files
+├── .gitignore                # Git ignore rules
+├── Dockerfile                # Docker image definition
+├── docker-compose.yml        # Docker services configuration
+├── init_airflow.py           # Airflow initialization script
+├── init_db.sql               # Database initialization SQL
+├── Makefile                  # Build and deployment commands
+├── requirements.txt          # Python dependencies
+└── requirements-airflow.txt  # Airflow-specific dependencies
+```
 
+### Key Components
 
+- **DAGs**: Contains Airflow workflow definitions for data processing and segment collection
+- **Source Code**: Core functionality for data processing, metrics computation, and website categorization
+- **Data Directory**: Organized storage for raw data, processed files, and reports
+- **Docker**: Containerization configuration for consistent deployment
+- **Tests**: Test files for ensuring code quality and functionality
+- **Configuration**: Various configuration files for database, Airflow, and dependencies
 
 ## Features
 
@@ -119,22 +136,6 @@ python -m pytest tests/
 - Docker Compose
 - Make
 - Git
-
-## Project Structure
-
-```
-.
-├── data/               # Data directory
-│   ├── raw/           # Raw Common Crawl data
-│   ├── processed/     # Intermediate processed data
-│   └── final/         # Final output data
-├── src/               # Source code
-├── dags/              # Airflow DAGs
-├── docker/            # Docker configuration
-├── tests/             # Test files
-├── notebooks/         # Jupyter notebooks
-└── config/            # Configuration files
-```
 
 # Cleanup
 
