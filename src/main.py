@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def process_wat_files(num_segments: int = 1) -> List[Dict[str, Any]]:
+def process_wat_files(num_segments: int = 3) -> List[Dict[str, Any]]:
     """
     Process WAT files from Common Crawl.
     

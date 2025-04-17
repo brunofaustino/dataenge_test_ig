@@ -53,7 +53,7 @@ class CommonCrawlWatProcessor:
         """
         return self.crawl_id
     
-    def get_segment_urls(self, num_segments: int = 1) -> List[str]:
+    def get_segment_urls(self, num_segments: int = 3) -> List[str]:
         """
         Get URLs for Common Crawl segments.
         

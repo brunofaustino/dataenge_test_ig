@@ -64,6 +64,12 @@ Run the DAGs in the following order:
 - common_crawl_segment_collector
 - common_crawl_processing
 
+
+![Airflow DAGs](img/airflow_dags.jpg)
+![Airflow DAG Crawl Precessing](img/common_crawl_processing.jpg)
+![Airflow DAG Segment Colector](img/common_crawl_segment_collector.jpg)
+
+
 ## Project Structure
 
 - `src/`: Source code for Common Crawl data processing
@@ -170,5 +176,3 @@ To remove the Python virtual environment:
 # Remove Python virtual environment
 make clean-venv
 ```
-
-These Make targets will ensure that all resources created by the project are properly cleaned up, preventing any unnecessary disk space usage or potential conflicts with other projects. 
